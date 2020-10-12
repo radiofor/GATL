@@ -7,16 +7,19 @@ from osgeo import osr
 from osgeo import ogr
 
 
-suffix = 'py'
+suffix = ['.py']
 
 
 class Geometry:
     @staticmethod
     def disolve(src_path):
         file_paths = fileman.get_all_files(r'F:\Projects\GATL', suffix)
-        for file_path in file_paths:
+        for file_path in file_paths['file']:
             driver = ogr.GetDriverByName("ESRI Shapefile")
-            src_ds = driver.Open(src_path, 0)
+            src_ds = driver.Open(src_path['path'], 0)
+
+    @staticmethod
+    def
 
 
 if __name__ == '__main__':
