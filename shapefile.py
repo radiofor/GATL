@@ -1,28 +1,32 @@
 # -*- coding: utf-8 -*-
 import os
-import fileman
 from tqdm import tqdm
 import time
-from osgeo import osr
-from osgeo import ogr
+import fileman
+import pandas as pd
+import geopandas as gpd
+
+suffix = ['.shp']
 
 
-suffix = ['.py']
+class Management:
+    @staticmethod
+    def merge(src_path, dst_path):
+        file_paths = fileman.get_all_files(src_path, suffix)
+        dst_gdf = gpd.GeoDataFrame(pd.concat([gpd.read_file(x['path']) for x in file_paths['file']], ignore_index=True),
+                                   crs=gpd.read_file(file_paths['file'][0]['path']).crs)
+        dst_gdf.to_file(dst_path)
 
 
-class Geometry:
+class Geoprocessing:
     @staticmethod
     def disolve(src_path):
         file_paths = fileman.get_all_files(src_path, suffix)
         for file_path in file_paths['file']:
-            driver = ogr.GetDriverByName("ESRI Shapefile")
-            src_ds = driver.Open(src_path['path'], 0)
-
-    @staticmethod
-    def merge(src_path):
-        file_paths = fileman.get_all_files(src_path, suffix)
+            continue
 
 
 if __name__ == '__main__':
-    # Geometry.disolve()
-    Geometry.merge(r'J:\Extent')
+    Management.merge(r'G:\RockGlacier\India\Himachal\GaoFen-1\Extent',
+                     r'G:\RockGlacier\India\Himachal\GaoFen-1\Extent\tiles.shp')
+    exit(0)
