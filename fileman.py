@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import shutil
 
 
 def get_all_files(src_path, src_suffix):
@@ -18,9 +19,14 @@ def get_all_files(src_path, src_suffix):
             main_name, suffix = os.path.splitext(file_name)
             if suffix.lower() in src_suffix:
                 file_path = os.path.join(src_path, file_name)
-                file_paths['file'].append({'path': file_path, 'name': main_name, 'suffix': suffix})
-
+                file_paths['file'].append({'path': file_path, 'fname': file_name, 'mname': main_name, 'suffix': suffix})
     return file_paths
+
+
+def copy_files(src_paths, dst_dir):
+    for src_path in src_paths:
+        dst_path = os.path.join(dst_dir, src_path['fname'])
+        shutil.copyfile(src_path['path'], dst_path)
 
 
 if __name__ == '__main__':

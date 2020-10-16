@@ -29,4 +29,5 @@ class Geoprocessing:
 if __name__ == '__main__':
     Management.merge(r'G:\RockGlacier\India\Himachal\GaoFen-1\Extent',
                      r'G:\RockGlacier\India\Himachal\GaoFen-1\Extent\tiles.shp')
+    Geoprocessing.disolve(r'')
     exit(0)
