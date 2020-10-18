@@ -32,7 +32,7 @@ class Geoprocessing:
 
 
 if __name__ == '__main__':
-    Management.merge(r'G:\RockGlacier\India\Himachal\GaoFen-1\Extent',
-                     r'G:\RockGlacier\India\Himachal\GaoFen-1\Extent\tiles.shp')
+    # Management.merge(r'G:\RockGlacier\India\Himachal\GaoFen-1\Extent',
+    #                  r'G:\RockGlacier\India\Himachal\GaoFen-1\Extent\tiles.shp')
     Geoprocessing.disolve(r'G:\Test\gadm36_IND_2.shp', r'G:\Test\Dissolve', ['NAME_0', 'NAME_1', 'NAME_2'], 'NAME_1', 'sum')
     exit(0)
