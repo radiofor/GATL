@@ -9,6 +9,7 @@ import pandas as pd
 import geopandas as gpd
 from shapely import geometry as shapely_geom
 import fileman
+from georeferencing import Transform as gatl_transform
 from geometry import Polygon as gatl_polygon
 
 
@@ -51,23 +52,41 @@ class Management:
             img_ds = io.imread(img_path)
             img_height, img_width = img_ds.shape[:2]
             if len(img_ds.shape) == 2:
-                img_count = 1
-            else:
-                img_count = img_ds.shape[2]
+                img_ds.resize(img_height, img_width, 1)
+            img_count = img_ds.shape[2]
 
             wf_path = os.path.join(wf_dir, mname + wf_suffix)
-            wf_paras = []
-            with open(wf_path, 'r') as f:
-                wf_para = f.readline()
-                while wf_para:
-                    wf_paras.append(float(wf_para))
-                    wf_para = f.readline()
-            transform = (wf_paras[4], wf_paras[0], wf_paras[1], wf_paras[5], wf_paras[2], wf_paras[3])
+            transform = gatl_transform.from_worldfile(wf_path)
 
             dst_path = os.path.join(dst_dir, mname + suffix[0])
             with rasterio.open(dst_path, 'w', driver='GTiff', height=img_height, width=img_width, count=img_count,
                                dtype=img_ds.dtype, crs=crs, transform=transform) as dst_ds:
-                exit(0)
+                for i in range(img_count):
+                    dst_ds.write(img_ds[:, :, i], i + 1)
+
+    @staticmethod
+    def create_by_image_and_geodata(img_dir, gdt_dir, img_suffix, gdt_suffix, dst_dir):
+        src_paths = [img_dir, gdt_dir]
+        src_suffixs = [img_suffix, gdt_suffix]
+        file_paths = fileman.get_ruled_files(src_paths, src_suffixs, 'intersection')
+        for mname in file_paths['mname']:
+            img_path = os.path.join(img_dir, mname + img_suffix)
+            img_ds = io.imread(img_path)
+            img_height, img_width = img_ds.shape[:2]
+            if len(img_ds.shape) == 2:
+                img_ds.resize(img_height, img_width, 1)
+            img_count = img_ds.shape[2]
+
+            gdt_path = os.path.join(gdt_dir, mname + gdt_suffix)
+            with rasterio.open(gdt_path) as gdt_ds:
+                crs = gdt_ds.crs
+                transform = gdt_ds.transform
+
+            dst_path = os.path.join(dst_dir, mname + suffix[0])
+            with rasterio.open(dst_path, 'w', driver='GTiff', height=img_height, width=img_width, count=img_count,
+                               dtype=img_ds.dtype, crs=crs, transform=transform) as dst_ds:
+                for i in range(img_count):
+                    dst_ds.write(img_ds[:, :, i], i + 1)
 
 
 class Extraction:
