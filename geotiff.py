@@ -134,6 +134,65 @@ class Extraction:
                 dst_path = os.path.join(dst_dir, file_path['mname'] + '.shp')
                 dst_gdf.to_file(dst_path)
 
+    @staticmethod
+    def clip_by_polygon(src_path, loc_path, dst_dir, data_name, band_codes, clip_size, overlay_size):
+        src_ds = rasterio.open(src_path)
+        transform = src_ds.transform
+        # max_y, min_x
+        src_leftup = [transform[5], transform[2]]
+        px_geosize = [-transform[4], transform[0]]
+        clip_geosize = [a * b for a, b in zip(clip_size, px_geosize)]
+        overlay_geosize = [a * b for a, b in zip(overlay_size, px_geosize)]
+        offset_geosize = [a - b for a, b in zip(clip_geosize, overlay_geosize)]
+
+        src_bands = []
+        count = len(band_codes)
+        for i in range(count):
+            src_bands.append(src_ds.read(band_codes[i]))
+        src_dtype = src_bands[0].dtype
+
+        loc_ds = gpd.read_file(loc_path)
+        geoms = [x for x in loc_ds.geometry]
+        loc_polygon = shapely_geom.MultiPolygon(geoms)
+        loc_bounds = loc_ds.bounds
+        bounds = [loc_bounds['minx'][0], loc_bounds['miny'][0],
+                  loc_bounds['maxx'][0], loc_bounds['maxy'][0]]
+        clip_count = [int((bounds[3] - bounds[1]) / offset_geosize[0]) + 1,
+                      int((bounds[2] - bounds[0]) / offset_geosize[1]) + 1]
+
+        for i in range(clip_count[0]):
+            for j in range(clip_count[1]):
+                # 待裁剪影像的坐标范围[min_x, min_y, max_x, max_y]
+                clip_bounds = (bounds[0] + offset_geosize[0] * j,
+                               bounds[3] - offset_geosize[0] * i - clip_geosize[0],
+                               bounds[0] + offset_geosize[0] * j + clip_geosize[1],
+                               bounds[3] - offset_geosize[0] * i)
+                clip_polygon = gatl_polygon.creat_from_bounds(clip_bounds)
+
+                # 若该幅影像坐标范围不与任何Polygon相交，则跳过裁剪
+                if not loc_polygon.intersects(clip_polygon):
+                    continue
+
+                # 设置名称
+                clip_name = data_name + '_{0}_{1}'.format(str(i).zfill(3), str(j).zfill(3))
+
+                # 创建World File
+                with open(os.path.join(dst_dir, clip_name + '.jgw'), 'w') as f:
+                    f.writelines([str(px_geosize[0]) + '\n', str(0) + '\n', str(0) + '\n',
+                                  str(-px_geosize[1]) + '\n', str(clip_bounds[0]) + '\n', str(clip_bounds[3]) + '\n'])
+
+                # max_y, min_x
+                clip_pxleftup = [round((src_leftup[0] - clip_bounds[3]) / px_geosize[0]),
+                                 round((clip_bounds[0] - src_leftup[1]) / px_geosize[1])]
+
+                clip_data = np.zeros(clip_size + [count], src_dtype)
+                for k in range(count):
+                    clip_data[:, :, k] = src_bands[k][clip_pxleftup[0]: clip_pxleftup[0] + clip_size[0],
+                                                      clip_pxleftup[1]: clip_pxleftup[1] + clip_size[1]]
+                clip_path = os.path.join(dst_dir, clip_name + '.jpg')
+                io.imsave(clip_path, clip_data)
+
+
 
 if __name__ == '__main__':
     # Extraction.export_bounds(r'G:\RockGlacier\India\Himachal\GaoFen-1',
@@ -141,6 +200,10 @@ if __name__ == '__main__':
     # print(Management.select_files_by_location(r'G:\RockGlacier\India\Himachal\GaoFen-1',
     #                                           r'G:\RockGlacier\India\Himachal\Boundary\region.shp'))
     # Management.create_by_image_and_worldfile(r'G:\Test', r'G:\Test', '.jpg', '.jgw', 'epsg:3857', r'G:\Test')
-    # Management.set_nodata_value(r'G:\Test\binary.tif', 0)
-    Management.convert_to_shapefile(r'G:\Test\binary.tif', [1], r'G:\Test')
+    # Management.set_nodata_value(r'G:\RockGlacier\Nyenchenthanglha\GaoFen-1\Nyenchenthanglha.tif', 0)
+    # Management.convert_to_shapefile(r'G:\Test\binary.tif', [1], r'G:\Test')
+    Extraction.clip_by_polygon(r'G:\RockGlacier\Nyenchenthanglha\GaoFen-1\Nyenchenthanglha_3857.tif',
+                               r'G:\RockGlacier\Nyenchenthanglha\Boundary\bounds_3857.shp',
+                               r'G:\RockGlacier\Nyenchenthanglha\GaoFen-1\JPG',
+                               'Nyenchenthanglha', [1], [1000, 1000], [200, 200])
     exit(0)

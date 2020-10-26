@@ -2,7 +2,6 @@
 import os
 import fileman
 from shapely import geometry as shapely_geom
-from pyproj import Transformer
 
 
 class Polygon:
