@@ -199,6 +199,10 @@ if __name__ == '__main__':
     # print(Management.select_files_by_location(r'G:\RockGlacier\India\Himachal\GaoFen-1',
     #                                           r'G:\RockGlacier\India\Himachal\Boundary\region.shp'))
     # Management.create_by_image_and_worldfile(r'G:\Test', r'G:\Test', '.jpg', '.jgw', 'epsg:3857', r'G:\Test')
-    # Management.set_nodata_value(r'G:\Test\binary.tif', 0)
-    Management.convert_to_shapefile(r'G:\Test\binary.tif', [1], r'G:\Test')
+    # Management.set_nodata_value(r'G:\RockGlacier\Nyenchenthanglha\GaoFen-1\Nyenchenthanglha.tif', 0)
+    # Management.convert_to_shapefile(r'G:\Test\binary.tif', [1], r'G:\Test')
+    Extraction.clip_by_polygon(r'G:\RockGlacier\Nyenchenthanglha\GaoFen-1\Nyenchenthanglha_3857.tif',
+                               r'G:\RockGlacier\Nyenchenthanglha\Boundary\bounds_3857.shp',
+                               r'G:\RockGlacier\Nyenchenthanglha\GaoFen-1\JPG',
+                               'Nyenchenthanglha', [1], [1000, 1000], [200, 200])
     exit(0)
